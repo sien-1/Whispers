@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Whispers notes data",
+  "type": "object",
+  "required": [
+    "version",
+    "people",
+    "others"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "people": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "aliases",
+          "notes"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "notes": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/note"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "others": {
+      "type": "object",
+      "required": [
+        "notes"
+      ],
+      "properties": {
+        "notes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/note"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "note": {
+      "type": "object",
+      "required": [
+        "id",
+        "message",
+        "createdAt"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

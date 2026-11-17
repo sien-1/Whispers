@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3f4f2">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="description" content="一张米白横线纸，写着一句只给你的悄悄话。">
+  <title>悄悄话</title>
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="site-shell">
+    <button class="back-button" id="backButton" type="button" aria-label="返回首页" hidden>
+      <span aria-hidden="true">←</span>
+    </button>
+
+    <main class="paper-stage" aria-label="悄悄话">
+      <div class="paper-stack" id="paperStack" data-pages="1">
+        <article class="paper" aria-label="一张横线纸条">
+          <section class="home-view" id="homeView">
+            <form class="name-form" id="nameForm" novalidate>
+              <label class="sr-only" for="nameInput">你的名字</label>
+              <div class="name-line" id="nameLine">
+                <span class="name-prefix" aria-hidden="true">致</span>
+                <input
+                  id="nameInput"
+                  name="name"
+                  type="text"
+                  placeholder="你的名字"
+                  autocomplete="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                >
+                <button class="open-button" id="openButton" type="submit">打开</button>
+              </div>
+              <p class="form-status" id="formStatus" aria-live="polite"></p>
+            </form>
+          </section>
+
+          <section class="reader-view" id="readerView" tabindex="-1" hidden>
+            <div class="reader-flow">
+              <p class="salutation">致 <span id="readerName"></span></p>
+              <p class="note-copy" id="noteMessage" aria-live="polite"></p>
+              <div class="reader-spacer" aria-hidden="true"></div>
+              <div class="timestamp-row">
+                <time class="note-time" id="noteTime"></time>
+              </div>
+            </div>
+          </section>
+        </article>
+      </div>
+
+      <nav class="pager" id="pager" aria-label="纸条翻页" hidden>
+        <button class="pager-button" id="previousButton" type="button" aria-label="上一张纸条">‹</button>
+        <span class="page-count" id="pageCount" aria-live="polite">1/1</span>
+        <button class="pager-button" id="nextButton" type="button" aria-label="下一张纸条">›</button>
+      </nav>
+    </main>
+
+    <p class="sr-only" id="liveStatus" aria-live="polite"></p>
+  </div>
+
+  <noscript>
+    <p class="noscript-message">请开启 JavaScript，纸条才能展开。</p>
+  </noscript>
+
+  <script src="./data-utils.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

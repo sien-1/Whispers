@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f0f1ee">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>悄悄话 · 发布端</title>
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+  <link rel="stylesheet" href="./publisher.css">
+</head>
+<body>
+  <div class="pub-shell">
+    <header class="pub-header">
+      <a class="icon-button" href="./index.html" aria-label="返回首页">
+        <span aria-hidden="true">←</span>
+      </a>
+      <div class="pub-heading">
+        <p class="eyebrow">本机发布工具</p>
+        <h1>悄悄话 · 发布端</h1>
+      </div>
+      <a class="text-button" href="./index.html">查看网站</a>
+    </header>
+
+    <div class="draft-banner" id="draftBanner" hidden>
+      <p>发现一份保存在本机的草稿。</p>
+      <div class="inline-actions">
+        <button class="small-button" id="restoreDraftButton" type="button">恢复草稿</button>
+        <button class="small-button quiet" id="dismissDraftButton" type="button">忽略</button>
+      </div>
+    </div>
+
+    <main>
+      <section class="stats" aria-label="内容概况">
+        <article class="stat">
+          <span class="stat-value" id="peopleCount">0</span>
+          <span class="stat-label">名字</span>
+        </article>
+        <article class="stat">
+          <span class="stat-value" id="notesCount">0</span>
+          <span class="stat-label">小纸条</span>
+        </article>
+        <article class="stat">
+          <span class="stat-value" id="fallbackCount">0</span>
+          <span class="stat-label">普通祝福</span>
+        </article>
+      </section>
+
+      <p class="load-message" id="loadMessage" aria-live="polite">正在读取 notes.json…</p>
+
+      <div class="workspace">
+        <aside class="names-panel" aria-label="名字分布">
+          <div class="panel-title-row">
+            <h2>名字分布</h2>
+            <button class="round-button" id="addPersonButton" type="button" aria-label="添加名字">＋</button>
+          </div>
+          <div class="name-list" id="nameList"></div>
+          <button class="name-item is-fallback" id="othersButton" type="button" aria-pressed="false">
+            <span class="name-copy">
+              <strong>普通祝福</strong>
+              <span>未匹配时展示</span>
+            </span>
+            <span class="count-badge" id="othersListCount">0</span>
+          </button>
+        </aside>
+
+        <section class="editor-panel" aria-label="小纸条分布">
+          <div class="mobile-picker-row">
+            <label class="mobile-name-picker">
+              <span>当前编辑</span>
+              <select id="personSelect"></select>
+            </label>
+            <button class="round-button" id="mobileAddPersonButton" type="button" aria-label="添加名字">＋</button>
+          </div>
+
+          <div class="empty-editor" id="emptyEditor" hidden>
+            <p>还没有名字。</p>
+            <button class="primary-button" id="emptyAddPersonButton" type="button">添加第一个名字</button>
+          </div>
+
+          <div id="editorContent">
+            <header class="editor-header">
+              <div>
+                <p class="eyebrow" id="editorEyebrow">正在编辑</p>
+                <h2 id="editorTitle">普通祝福</h2>
+              </div>
+              <button class="danger-button" id="deletePersonButton" type="button" hidden>删除这个名字</button>
+            </header>
+
+            <div class="person-fields" id="personFields">
+              <label>
+                <span>显示称呼</span>
+                <input id="personNameInput" type="text" autocomplete="off" placeholder="例如：小禾">
+              </label>
+              <label>
+                <span>别名 <small>用逗号分隔，可留空</small></span>
+                <input id="personAliasesInput" type="text" autocomplete="off" placeholder="例如：阿禾, 小何">
+              </label>
+            </div>
+
+            <div class="notes-heading">
+              <h3>小纸条分布</h3>
+              <button class="secondary-button" id="addNoteButton" type="button">＋ 添加一张</button>
+            </div>
+            <div class="notes-editor" id="notesEditor"></div>
+          </div>
+        </section>
+      </div>
+
+      <section class="save-panel" aria-label="保存与发布">
+        <div>
+          <h2>保存与发布</h2>
+          <p class="status-message" id="actionStatus" aria-live="polite"></p>
+        </div>
+        <div class="save-actions">
+          <button class="secondary-button" id="reloadButton" type="button">重新读取</button>
+          <button class="secondary-button" id="saveDraftButton" type="button">保存本机草稿</button>
+          <button class="secondary-button" id="downloadButton" type="button">下载 JSON</button>
+          <button class="secondary-button" id="copyButton" type="button">复制 JSON</button>
+        </div>
+      </section>
+
+      <details class="disclosure">
+        <summary>查看当前 notes.json</summary>
+        <pre class="json-preview" id="jsonPreview"></pre>
+      </details>
+
+      <details class="disclosure github-panel">
+        <summary>发布到 GitHub</summary>
+        <form class="github-form" id="githubForm">
+          <p class="form-note">
+            使用细粒度令牌直接提交 notes.json。令牌只保存在当前标签页的会话存储中，不会写入网站数据。
+          </p>
+          <div class="github-grid">
+            <label>
+              <span>仓库</span>
+              <input id="repoInput" type="text" autocomplete="off" placeholder="owner/repository" required>
+            </label>
+            <label>
+              <span>分支</span>
+              <input id="branchInput" type="text" autocomplete="off" value="main" required>
+            </label>
+            <label>
+              <span>文件路径</span>
+              <input id="pathInput" type="text" autocomplete="off" value="notes.json" required>
+            </label>
+            <label>
+              <span>Fine-grained token</span>
+              <input id="tokenInput" type="password" autocomplete="off" spellcheck="false" required>
+            </label>
+          </div>
+          <button class="primary-button" id="publishButton" type="submit">发布当前数据</button>
+          <p class="status-message" id="publishStatus" aria-live="polite"></p>
+        </form>
+      </details>
+
+      <footer class="pub-footer">
+        部署后的 notes.json 是可公开读取的静态文件，请只收录适合分享的内容。
+      </footer>
+    </main>
+  </div>
+
+  <script src="./data-utils.js"></script>
+  <script src="./publisher.js"></script>
+</body>
+</html>
