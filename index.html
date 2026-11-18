@@ -8,7 +8,7 @@
   <meta name="description" content="一张米白横线纸，写下只对某个人说的话。支持姓名匹配、多页纸条与普通祝福。">
   <title>跨年悄悄话 · Whispers</title>
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
-  <link rel="stylesheet" href="./styles.css?v=20261118-4">
+  <link rel="stylesheet" href="./styles.css?v=20261118-5">
 </head>
 <body>
   <div class="site-shell">
@@ -39,6 +39,27 @@
             </form>
           </section>
 
+          <section class="screening-view" id="screeningView" hidden>
+            <form class="screening-form" id="screeningForm" novalidate>
+              <p class="screening-title" id="screeningTitle">先回答一个小问题，找到你的那张纸。</p>
+              <div id="screeningQuestions"></div>
+              <label class="sr-only" for="screeningAnswer">小问题答案</label>
+              <div class="answer-line">
+                <input
+                  id="screeningAnswer"
+                  name="answer"
+                  type="text"
+                  placeholder="写下答案"
+                  autocomplete="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                >
+                <button class="open-button" id="verifyAnswerButton" type="submit">确认</button>
+              </div>
+              <p class="form-status" id="screeningStatus" aria-live="polite"></p>
+            </form>
+          </section>
+
           <section class="reader-view" id="readerView" tabindex="-1" hidden>
             <div class="reader-flow">
               <p class="salutation">致 <span id="readerName"></span></p>
@@ -66,7 +87,7 @@
     <p class="noscript-message">请开启 JavaScript，纸条才能展开。</p>
   </noscript>
 
-  <script src="./data-utils.js?v=20261118-4"></script>
-  <script src="./app.js?v=20261118-4"></script>
+  <script src="./data-utils.js?v=20261118-5"></script>
+  <script src="./app.js?v=20261118-5"></script>
 </body>
 </html>

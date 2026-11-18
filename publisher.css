@@ -444,6 +444,66 @@ button:disabled {
   font-size: 11px;
 }
 
+.screening-editor {
+  margin: 0 0 18px;
+  padding: 14px;
+  border: 1px solid #e1d9cd;
+  border-radius: 10px;
+  background: rgba(250, 247, 240, 0.7);
+}
+
+.screening-editor-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 13px;
+}
+
+.screening-editor-head h3 {
+  margin: 0 0 4px;
+  color: #5c5750;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.screening-editor-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.screening-fields {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 10px;
+}
+
+.screening-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.screening-fields label small {
+  color: #a19a90;
+  font-size: 11px;
+}
+
+.screening-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 11px;
+}
+
+.screening-actions .status-message {
+  margin: 0;
+}
+
 input,
 textarea,
 select {
@@ -798,6 +858,20 @@ select:focus {
 
   .person-fields {
     grid-template-columns: 1fr;
+  }
+
+  .screening-editor-head {
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .screening-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .screening-actions {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .note-meta,

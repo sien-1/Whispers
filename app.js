@@ -14,6 +14,13 @@ const elements = {
   paperStack: document.getElementById("paperStack"),
   paper: document.querySelector(".paper"),
   homeView: document.getElementById("homeView"),
+  screeningView: document.getElementById("screeningView"),
+  screeningForm: document.getElementById("screeningForm"),
+  screeningTitle: document.getElementById("screeningTitle"),
+  screeningQuestions: document.getElementById("screeningQuestions"),
+  screeningAnswer: document.getElementById("screeningAnswer"),
+  verifyAnswerButton: document.getElementById("verifyAnswerButton"),
+  screeningStatus: document.getElementById("screeningStatus"),
   readerView: document.getElementById("readerView"),
   nameForm: document.getElementById("nameForm"),
   nameLine: document.getElementById("nameLine"),
@@ -36,6 +43,8 @@ const state = {
   source: "personal",
   displayName: "",
   notes: [],
+  candidates: [],
+  selectedCandidate: null,
   pageIndex: 0,
   turning: false
 };
@@ -67,12 +76,20 @@ async function loadNotes() {
   }
 }
 
-function findPerson(name) {
+function findPeople(name) {
   const target = dataUtils.normalizeName(name);
-  return state.data.people.find((person) => {
+  return state.data.people.filter((person) => {
     const candidates = [person.name, ...(person.aliases || [])];
     return candidates.some((candidate) => dataUtils.normalizeName(candidate) === target);
   });
+}
+
+function hasScreening(person) {
+  return Boolean(
+    person?.screening?.question
+    && Array.isArray(person.screening.answerHashes)
+    && person.screening.answerHashes.length
+  );
 }
 
 function updatePage() {
@@ -110,6 +127,7 @@ function showReader({ name, notes, source }) {
 
   clearPaperAnimation();
   elements.homeView.hidden = true;
+  elements.screeningView.hidden = true;
   elements.readerView.hidden = false;
   elements.backButton.hidden = false;
   elements.pager.hidden = false;
@@ -118,11 +136,76 @@ function showReader({ name, notes, source }) {
   elements.readerView.focus({ preventScroll: true });
 }
 
+function selectScreeningCandidate(candidateId) {
+  state.selectedCandidate = state.candidates.find((person) => person.id === candidateId)
+    || state.candidates[0]
+    || null;
+}
+
+function showScreening(candidates) {
+  state.screen = "screening";
+  state.turning = false;
+  state.candidates = candidates;
+  state.selectedCandidate = candidates[0] || null;
+  state.source = "personal";
+
+  clearPaperAnimation();
+  elements.homeView.hidden = true;
+  elements.readerView.hidden = true;
+  elements.screeningView.hidden = false;
+  elements.backButton.hidden = false;
+  elements.pager.hidden = true;
+  elements.paperStack.dataset.pages = "1";
+  elements.screeningQuestions.replaceChildren();
+  elements.screeningStatus.textContent = "";
+  elements.screeningAnswer.value = "";
+
+  if (candidates.length === 1) {
+    elements.screeningTitle.textContent = "先回答一个小问题，找到你的那张纸。";
+    const question = document.createElement("p");
+    question.className = "screening-question";
+    question.textContent = candidates[0].screening.question;
+    elements.screeningQuestions.append(question);
+  } else {
+    elements.screeningTitle.textContent = "这个名字对应不止一张纸，请选择属于你的小问题。";
+    const group = document.createElement("fieldset");
+    group.className = "screening-choice-group";
+    const legend = document.createElement("legend");
+    legend.textContent = "选择你能回答的问题";
+    group.append(legend);
+
+    candidates.forEach((person, index) => {
+      const label = document.createElement("label");
+      label.className = "screening-choice";
+      const radio = document.createElement("input");
+      radio.type = "radio";
+      radio.name = "screeningCandidate";
+      radio.value = person.id;
+      radio.checked = index === 0;
+      radio.addEventListener("change", () => {
+        selectScreeningCandidate(person.id);
+        elements.screeningStatus.textContent = "";
+      });
+      const text = document.createElement("span");
+      text.textContent = person.screening.question;
+      label.append(radio, text);
+      group.append(label);
+    });
+
+    elements.screeningQuestions.append(group);
+  }
+
+  elements.screeningAnswer.focus({ preventScroll: true });
+}
+
 function showHome() {
   state.screen = "home";
   state.turning = false;
+  state.candidates = [];
+  state.selectedCandidate = null;
   clearPaperAnimation();
   elements.homeView.hidden = false;
+  elements.screeningView.hidden = true;
   elements.readerView.hidden = true;
   elements.backButton.hidden = true;
   elements.pager.hidden = true;
@@ -174,13 +257,17 @@ elements.nameForm.addEventListener("submit", (event) => {
     return;
   }
 
-  const person = findPerson(name);
-  if (person) {
+  const people = findPeople(name);
+  const allHaveScreening = people.length > 0 && people.every(hasScreening);
+
+  if (people.length === 1 && !hasScreening(people[0])) {
     showReader({
-      name: person.name,
-      notes: person.notes,
+      name: people[0].name,
+      notes: people[0].notes,
       source: "personal"
     });
+  } else if (allHaveScreening) {
+    showScreening(people);
   } else {
     showReader({
       name: "",
@@ -194,11 +281,55 @@ elements.nameInput.addEventListener("input", () => {
   elements.formStatus.textContent = "";
 });
 
+elements.screeningForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const answer = elements.screeningAnswer.value.trim();
+  const person = state.selectedCandidate;
+
+  if (!answer) {
+    elements.screeningStatus.textContent = "先写下你的答案。";
+    elements.screeningAnswer.focus();
+    return;
+  }
+  if (!person || !hasScreening(person)) return;
+
+  elements.verifyAnswerButton.disabled = true;
+  elements.screeningStatus.textContent = "正在确认…";
+
+  try {
+    const answerHash = await dataUtils.hashAnswer(answer);
+    if (person.screening.answerHashes.includes(answerHash)) {
+      showReader({
+        name: person.name,
+        notes: person.notes,
+        source: "personal"
+      });
+    } else {
+      elements.screeningStatus.textContent = "答案还不太一样，再想一想吧。";
+      elements.screeningAnswer.select();
+    }
+  } catch (error) {
+    console.error(error);
+    elements.screeningStatus.textContent = "暂时无法确认答案，请稍后再试。";
+  } finally {
+    elements.verifyAnswerButton.disabled = false;
+  }
+});
+
+elements.screeningAnswer.addEventListener("input", () => {
+  elements.screeningStatus.textContent = "";
+});
+
 elements.previousButton.addEventListener("click", () => turnPage(-1));
 elements.nextButton.addEventListener("click", () => turnPage(1));
 elements.backButton.addEventListener("click", showHome);
 
 document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && state.screen !== "home") {
+    event.preventDefault();
+    showHome();
+    return;
+  }
   if (state.screen !== "reader") return;
   if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
 
@@ -208,9 +339,6 @@ document.addEventListener("keydown", (event) => {
   } else if (event.key === "ArrowRight") {
     event.preventDefault();
     turnPage(1);
-  } else if (event.key === "Escape") {
-    event.preventDefault();
-    showHome();
   }
 });
 

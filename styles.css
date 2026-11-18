@@ -224,7 +224,8 @@ a:focus-visible {
   transform: translateY(2px);
 }
 
-.name-line {
+.name-line,
+.answer-line {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -234,7 +235,8 @@ a:focus-visible {
   transition: border-color 180ms ease;
 }
 
-.name-line:focus-within {
+.name-line:focus-within,
+.answer-line:focus-within {
   border-bottom-color: color-mix(in srgb, var(--accent) 72%, transparent);
 }
 
@@ -251,7 +253,8 @@ a:focus-visible {
   letter-spacing: 0.08em;
 }
 
-.name-line input {
+.name-line input,
+.answer-line input {
   width: 100%;
   min-width: 0;
   height: 42px;
@@ -266,9 +269,82 @@ a:focus-visible {
   letter-spacing: 0.04em;
 }
 
-.name-line input::placeholder {
+.name-line input::placeholder,
+.answer-line input::placeholder {
   color: #999289;
   opacity: 1;
+}
+
+.screening-view {
+  min-height: 570px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 58px clamp(28px, 8vw, 74px);
+}
+
+.screening-form {
+  width: min(100%, 480px);
+  transform: translateY(2px);
+}
+
+.screening-title {
+  margin: 0 0 17px;
+  color: var(--ink);
+  font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+  font-size: clamp(17px, 2.5vw, 20px);
+  line-height: 1.65;
+  letter-spacing: 0.02em;
+}
+
+#screeningQuestions {
+  margin-bottom: 13px;
+}
+
+.screening-question {
+  margin: 0;
+  color: var(--accent);
+  font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.screening-choice-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.screening-choice-group legend {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.screening-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 1px solid rgba(112, 96, 78, 0.13);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.26);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.screening-choice:has(input:checked) {
+  border-color: var(--accent);
+  background: rgba(255, 251, 244, 0.76);
+}
+
+.screening-choice input {
+  margin-top: 4px;
+  accent-color: var(--accent);
 }
 
 .open-button {
@@ -497,6 +573,7 @@ a:focus-visible {
 
   .paper,
   .home-view,
+  .screening-view,
   .reader-view,
   .reader-flow {
     min-height: 570px;
@@ -504,6 +581,10 @@ a:focus-visible {
 
   .home-view {
     padding: 50px 30px;
+  }
+
+  .screening-view {
+    padding: 48px 30px;
   }
 
   .reader-flow {
@@ -527,6 +608,10 @@ a:focus-visible {
   .home-view {
     padding: 48px 26px;
   }
+
+      .screening-view {
+        padding: 44px 26px;
+      }
 
   .reader-flow {
     padding: 167px 27px 65px;

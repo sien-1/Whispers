@@ -7,7 +7,7 @@
   <meta name="robots" content="noindex, nofollow, noarchive">
   <title>悄悄话 · 发布端</title>
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
-  <link rel="stylesheet" href="./publisher.css?v=20261118-4">
+  <link rel="stylesheet" href="./publisher.css?v=20261118-5">
 </head>
 <body>
   <div class="pub-shell">
@@ -98,6 +98,30 @@
               </label>
             </div>
 
+            <section class="screening-editor" id="screeningEditor" aria-labelledby="screeningEditorTitle">
+              <div class="screening-editor-head">
+                <div>
+                  <h3 id="screeningEditorTitle">重名筛查</h3>
+                  <p>可选。设置后，访客需要先答对问题才能打开纸条；答案只保存为 SHA-256 摘要。</p>
+                </div>
+                <span class="count-badge" id="screeningStateBadge">未设置</span>
+              </div>
+              <div class="screening-fields">
+                <label>
+                  <span>小问题</span>
+                  <input id="screeningQuestionInput" type="text" autocomplete="off" placeholder="例如：我们第一次见面的城市？">
+                </label>
+                <label>
+                  <span>答案 <small>多个写法用逗号分隔</small></span>
+                  <input id="screeningAnswersInput" type="password" autocomplete="new-password" spellcheck="false" placeholder="已设置时，留空可保留原答案">
+                </label>
+              </div>
+              <div class="screening-actions">
+                <button class="secondary-button" id="saveScreeningButton" type="button">保存筛查询问</button>
+                <p class="status-message" id="screeningStatus" aria-live="polite"></p>
+              </div>
+            </section>
+
             <div class="notes-heading">
               <h3>小纸条分布</h3>
               <button class="secondary-button" id="addNoteButton" type="button">＋ 添加一张</button>
@@ -161,7 +185,7 @@
     </main>
   </div>
 
-  <script src="./data-utils.js?v=20261118-4"></script>
-  <script src="./publisher.js?v=20261118-4"></script>
+  <script src="./data-utils.js?v=20261118-5"></script>
+  <script src="./publisher.js?v=20261118-5"></script>
 </body>
 </html>

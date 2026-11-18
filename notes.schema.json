@@ -37,6 +37,29 @@
             },
             "uniqueItems": true
           },
+          "screening": {
+            "type": "object",
+            "required": [
+              "question",
+              "answerHashes"
+            ],
+            "properties": {
+              "question": {
+                "type": "string",
+                "minLength": 1
+              },
+              "answerHashes": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "uniqueItems": true
+              }
+            },
+            "additionalProperties": false
+          },
           "notes": {
             "type": "array",
             "minItems": 1,

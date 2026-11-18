@@ -24,6 +24,42 @@
           "createdAt": "2026-12-31T23:58:00+08:00"
         }
       ]
+    },
+    {
+      "id": "demo-duplicate-1",
+      "name": "同名",
+      "aliases": [],
+      "screening": {
+        "question": "我们第一次旅行去的是哪座城市？",
+        "answerHashes": [
+          "a8027f71a8e38bcb912f7c24ae1415cd151af10b84f30d5f2429a532b2be3a5c"
+        ]
+      },
+      "notes": [
+        {
+          "id": "demo-duplicate-note-1",
+          "message": "这是同名的第一位朋友会看到的小纸条。",
+          "createdAt": "2026-12-31T23:54:00+08:00"
+        }
+      ]
+    },
+    {
+      "id": "demo-duplicate-2",
+      "name": "同名",
+      "aliases": [],
+      "screening": {
+        "question": "我们是在哪一年认识的？",
+        "answerHashes": [
+          "1bea20e1df19b12013976de2b5e0e3d1fb4ba088b59fe53642c324298b21ffd9"
+        ]
+      },
+      "notes": [
+        {
+          "id": "demo-duplicate-note-2",
+          "message": "这是同名的第二位朋友会看到的小纸条。",
+          "createdAt": "2026-12-31T23:56:00+08:00"
+        }
+      ]
     }
   ],
   "others": {

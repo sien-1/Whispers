@@ -26,6 +26,12 @@
     personFields: document.getElementById("personFields"),
     personNameInput: document.getElementById("personNameInput"),
     personAliasesInput: document.getElementById("personAliasesInput"),
+    screeningEditor: document.getElementById("screeningEditor"),
+    screeningStateBadge: document.getElementById("screeningStateBadge"),
+    screeningQuestionInput: document.getElementById("screeningQuestionInput"),
+    screeningAnswersInput: document.getElementById("screeningAnswersInput"),
+    saveScreeningButton: document.getElementById("saveScreeningButton"),
+    screeningStatus: document.getElementById("screeningStatus"),
     addPersonButton: document.getElementById("addPersonButton"),
     addNoteButton: document.getElementById("addNoteButton"),
     notesEditor: document.getElementById("notesEditor"),
@@ -65,6 +71,7 @@
       id: dataUtils.makeId("person"),
       name: "新名字",
       aliases: [],
+      screening: null,
       notes: [createNote()]
     };
   }
@@ -99,6 +106,7 @@
         aliases: Array.isArray(person?.aliases)
           ? person.aliases.map((alias) => String(alias))
           : [],
+        screening: dataUtils.normalizeScreening(person?.screening),
         notes: (Array.isArray(person?.notes) ? person.notes : []).map((note) => ({
           id: String(note?.id || dataUtils.makeId("note")),
           message: String(note?.message || ""),
@@ -360,8 +368,20 @@
       : (person.name.trim() || "未命名");
     elements.deletePersonButton.hidden = isOthers;
     elements.personFields.hidden = isOthers;
+    elements.screeningEditor.hidden = isOthers;
     elements.personNameInput.value = isOthers ? "" : person.name;
     elements.personAliasesInput.value = isOthers ? "" : person.aliases.join(", ");
+    elements.screeningQuestionInput.value = isOthers ? "" : (person.screening?.question || "");
+    elements.screeningAnswersInput.value = "";
+    elements.screeningAnswersInput.placeholder = person?.screening?.answerHashes?.length
+      ? "已设置答案；留空保持，输入新答案可替换"
+      : "多个答案用逗号分隔";
+    elements.screeningStateBadge.textContent = person?.screening?.answerHashes?.length
+      ? "已设置"
+      : "未设置";
+    elements.screeningStatus.textContent = person?.screening?.answerHashes?.length
+      ? `已保存 ${person.screening.answerHashes.length} 个答案`
+      : "重名时建议设置";
     elements.othersButton.setAttribute("aria-pressed", String(isOthers));
     elements.emptyEditor.hidden = true;
     elements.editorContent.hidden = false;
@@ -447,6 +467,66 @@
     updateDirtyState("提交时间已更新为当前时间。");
   }
 
+  async function saveScreening() {
+    const person = getSelectedPerson();
+    if (!person) return;
+
+    const question = elements.screeningQuestionInput.value.trim();
+    const answers = elements.screeningAnswersInput.value
+      .split(/[,，\n]/)
+      .map((answer) => answer.trim())
+      .filter(Boolean);
+    const existingHashes = person.screening?.answerHashes || [];
+
+    if (!question && answers.length) {
+      elements.screeningStatus.textContent = "请先填写小问题，再保存答案。";
+      return;
+    }
+
+    if (!question) {
+      person.screening = null;
+      renderEditor();
+      updateDirtyState("已移除这位访客的筛查问题。");
+      elements.screeningStatus.textContent = "重名时建议设置";
+      return;
+    }
+
+    if (!answers.length && !existingHashes.length) {
+      elements.screeningStatus.textContent = "请至少填写一个筛查答案。";
+      return;
+    }
+
+    elements.saveScreeningButton.disabled = true;
+    elements.screeningStatus.textContent = "正在保存答案…";
+
+    try {
+      const uniqueAnswers = Array.from(new Map(
+        answers.map((answer) => [dataUtils.normalizeAnswer(answer), answer])
+      ).values()).filter((answer) => dataUtils.normalizeAnswer(answer));
+      const answerHashes = uniqueAnswers.length
+        ? await Promise.all(uniqueAnswers.map((answer) => dataUtils.hashAnswer(answer)))
+        : existingHashes;
+      const validHashes = Array.from(new Set(answerHashes.filter(Boolean)));
+
+      if (!validHashes.length) {
+        throw new Error("筛查答案不能为空。");
+      }
+
+      person.screening = {
+        question,
+        answerHashes: validHashes
+      };
+      renderEditor();
+      updateDirtyState("重名筛查问题已更新。");
+      elements.screeningStatus.textContent = `已保存 ${validHashes.length} 个答案`;
+    } catch (error) {
+      console.error(error);
+      elements.screeningStatus.textContent = error.message || "筛查问题保存失败。";
+    } finally {
+      elements.saveScreeningButton.disabled = false;
+    }
+  }
+
   function validateData() {
     const errors = [];
     const identityOwners = new Map();
@@ -461,16 +541,17 @@
         errors.push(`第 ${personIndex + 1} 个名字还没有填写称呼。`);
       }
       const identities = [name, ...person.aliases];
-      identities.forEach((identity) => {
-        const key = dataUtils.normalizeName(identity);
-        if (!key) return;
-        const owner = identityOwners.get(key);
-        if (owner !== undefined && owner !== personIndex) {
-          errors.push(`名字或别名“${identity}”和其他人重复了。`);
-        } else {
-          identityOwners.set(key, personIndex);
-        }
-      });
+      Array.from(new Set(identities.map((identity) => dataUtils.normalizeName(identity)).filter(Boolean)))
+        .forEach((key) => {
+          if (!identityOwners.has(key)) identityOwners.set(key, new Set());
+          identityOwners.get(key).add(personIndex);
+        });
+
+      const hasQuestion = Boolean(person.screening?.question);
+      const hasAnswers = Boolean(person.screening?.answerHashes?.length);
+      if (hasQuestion !== hasAnswers) {
+        errors.push(`“${name || "未命名"}”的筛查问题和答案需要同时设置。`);
+      }
       if (!person.notes.length) {
         errors.push(`“${name || "未命名"}”还没有小纸条。`);
       }
@@ -479,6 +560,30 @@
           errors.push(`“${name || "未命名"}”的第 ${noteIndex + 1} 张小纸条是空的。`);
         }
       });
+    });
+
+    const duplicatePeople = new Set();
+    identityOwners.forEach((owners) => {
+      if (owners.size > 1) {
+        owners.forEach((personIndex) => duplicatePeople.add(personIndex));
+      }
+    });
+
+    duplicatePeople.forEach((personIndex) => {
+      const person = state.data.people[personIndex];
+      if (!person?.screening?.question || !person.screening.answerHashes?.length) {
+        errors.push(`“${person?.name || "未命名"}”存在重名，请为这一条设置小问题和答案。`);
+      }
+    });
+
+    identityOwners.forEach((owners) => {
+      if (owners.size <= 1) return;
+      const questions = Array.from(owners)
+        .map((personIndex) => dataUtils.normalizeName(state.data.people[personIndex]?.screening?.question || ""))
+        .filter(Boolean);
+      if (questions.length === owners.size && new Set(questions).size !== questions.length) {
+        errors.push("同一重名组中的筛查问题需要彼此不同。");
+      }
     });
 
     if (!state.data.others.notes.length) {
@@ -518,6 +623,12 @@
         name: person.name.trim(),
         aliases: uniqueAliases(person.aliases)
           .filter((alias) => dataUtils.normalizeName(alias) !== dataUtils.normalizeName(person.name)),
+        ...(person.screening ? {
+          screening: {
+            question: person.screening.question.trim(),
+            answerHashes: Array.from(new Set(person.screening.answerHashes))
+          }
+        } : {}),
         notes: person.notes.map((note) => ({
           id: note.id,
           message: note.message.trim(),
@@ -745,6 +856,7 @@
     elements.emptyAddPersonButton.addEventListener("click", addPerson);
     elements.addNoteButton.addEventListener("click", addNote);
     elements.deletePersonButton.addEventListener("click", deletePerson);
+    elements.saveScreeningButton.addEventListener("click", saveScreening);
 
     elements.othersButton.addEventListener("click", () => selectKey("others"));
     elements.personSelect.addEventListener("change", () => selectKey(elements.personSelect.value));
