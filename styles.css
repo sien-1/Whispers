@@ -221,6 +221,7 @@ a:focus-visible {
 
 .name-form {
   width: min(100%, 450px);
+  transform: translateY(5px);
 }
 
 .name-line {
@@ -354,6 +355,8 @@ a:focus-visible {
 }
 
 .note-time {
+  position: relative;
+  top: 4px;
   color: color-mix(in srgb, var(--ink) 44%, transparent);
   font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
   font-size: 11px;
@@ -496,7 +499,7 @@ a:focus-visible {
   .home-view,
   .reader-view,
   .reader-flow {
-    min-height: 590px;
+    min-height: 570px;
   }
 
   .home-view {
@@ -504,7 +507,7 @@ a:focus-visible {
   }
 
   .reader-flow {
-    padding: 169px 34px 65px;
+    padding: 170px 34px 65px;
   }
 
   .note-copy {
@@ -526,7 +529,7 @@ a:focus-visible {
   }
 
   .reader-flow {
-    padding: 169px 27px 65px;
+    padding: 170px 27px 65px;
   }
 
   .note-copy {
