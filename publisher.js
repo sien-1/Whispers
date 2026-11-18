@@ -304,16 +304,28 @@
       count.className = "character-count";
       count.textContent = `${note.message.length} 字`;
 
-      const timeLabel = document.createElement("label");
-      timeLabel.className = "note-time-field";
-      const timeCaption = document.createElement("span");
+      const timeField = document.createElement("div");
+      timeField.className = "note-time-field";
+      const timeHead = document.createElement("div");
+      timeHead.className = "time-field-head";
+      const timeCaption = document.createElement("label");
       timeCaption.textContent = "提交时间";
+      const timeId = `note-time-${note.id}`;
+      timeCaption.htmlFor = timeId;
+      const nowButton = document.createElement("button");
+      nowButton.type = "button";
+      nowButton.className = "time-now-button";
+      nowButton.textContent = "当前时间";
+      nowButton.dataset.action = "now";
+      nowButton.dataset.noteId = note.id;
       const timeInput = document.createElement("input");
+      timeInput.id = timeId;
       timeInput.type = "datetime-local";
       timeInput.value = dataUtils.toDateTimeLocal(note.createdAt);
       timeInput.dataset.noteId = note.id;
-      timeLabel.append(timeCaption, timeInput);
-      meta.append(count, timeLabel);
+      timeHead.append(timeCaption, nowButton);
+      timeField.append(timeHead, timeInput);
+      meta.append(count, timeField);
 
       article.append(toolbar, textarea, meta);
       elements.notesEditor.append(article);
@@ -425,6 +437,14 @@
     notes.splice(index, 1);
     renderAll();
     updateDirtyState("已删除一张小纸条。");
+  }
+
+  function setNoteTimeToNow(noteId) {
+    const note = getSelectedNotes().find((item) => item.id === noteId);
+    if (!note) return;
+    note.createdAt = new Date().toISOString();
+    renderEditor();
+    updateDirtyState("提交时间已更新为当前时间。");
   }
 
   function validateData() {
@@ -762,6 +782,7 @@
       if (action === "up") moveNote(noteId, -1);
       if (action === "down") moveNote(noteId, 1);
       if (action === "delete") deleteNote(noteId);
+      if (action === "now") setNoteTimeToNow(noteId);
     });
 
     elements.saveDraftButton.addEventListener("click", () => saveDraft(false));
