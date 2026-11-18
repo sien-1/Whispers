@@ -221,7 +221,7 @@ a:focus-visible {
 
 .name-form {
   width: min(100%, 450px);
-  transform: translateY(5px);
+  transform: translateY(2px);
 }
 
 .name-line {
@@ -314,7 +314,7 @@ a:focus-visible {
   min-height: 570px;
   display: flex;
   flex-direction: column;
-  padding: 169px clamp(30px, 10vw, 72px) 65px;
+  padding: 166px clamp(30px, 10vw, 72px) 65px;
 }
 
 .salutation,
@@ -356,7 +356,7 @@ a:focus-visible {
 
 .note-time {
   position: relative;
-  top: 4px;
+  top: 1px;
   color: color-mix(in srgb, var(--ink) 44%, transparent);
   font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
   font-size: 11px;
@@ -507,7 +507,7 @@ a:focus-visible {
   }
 
   .reader-flow {
-    padding: 170px 34px 65px;
+    padding: 167px 34px 65px;
   }
 
   .note-copy {
@@ -529,7 +529,7 @@ a:focus-visible {
   }
 
   .reader-flow {
-    padding: 170px 27px 65px;
+    padding: 167px 27px 65px;
   }
 
   .note-copy {
