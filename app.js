@@ -49,6 +49,11 @@ const state = {
   turning: false
 };
 
+function resolveNotes(noteIds) {
+  const byId = new Map(state.data.noteLibrary.map((note) => [note.id, note]));
+  return noteIds.map((noteId) => byId.get(noteId)).filter(Boolean);
+}
+
 async function loadNotes() {
   elements.openButton.disabled = true;
   elements.formStatus.textContent = "正在准备纸条…";
@@ -60,8 +65,11 @@ async function loadNotes() {
     }
     const raw = await response.json();
     state.data = dataUtils.normalizeData(raw);
-    if (!state.data.others.notes.length) {
-      state.data.others.notes = [fallbackNote];
+    if (!state.data.others.noteIds.length) {
+      if (!state.data.noteLibrary.some((note) => note.id === fallbackNote.id)) {
+        state.data.noteLibrary.push(fallbackNote);
+      }
+      state.data.others.noteIds = [fallbackNote.id];
     }
     elements.formStatus.textContent = "";
     elements.openButton.disabled = false;
@@ -263,7 +271,7 @@ elements.nameForm.addEventListener("submit", (event) => {
   if (people.length === 1 && !hasScreening(people[0])) {
     showReader({
       name: people[0].name,
-      notes: people[0].notes,
+      notes: resolveNotes(people[0].noteIds),
       source: "personal"
     });
   } else if (allHaveScreening) {
@@ -271,7 +279,7 @@ elements.nameForm.addEventListener("submit", (event) => {
   } else {
     showReader({
       name: "",
-      notes: state.data.others.notes,
+      notes: resolveNotes(state.data.others.noteIds),
       source: "fallback"
     });
   }
@@ -301,7 +309,7 @@ elements.screeningForm.addEventListener("submit", async (event) => {
     if (person.screening.answerHashes.includes(answerHash)) {
       showReader({
         name: person.name,
-        notes: person.notes,
+        notes: resolveNotes(person.noteIds),
         source: "personal"
       });
     } else {

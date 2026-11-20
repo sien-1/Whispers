@@ -4,12 +4,19 @@
   "type": "object",
   "required": [
     "version",
+    "noteLibrary",
     "people",
     "others"
   ],
   "properties": {
     "version": {
-      "const": 1
+      "const": 2
+    },
+    "noteLibrary": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/note"
+      }
     },
     "people": {
       "type": "array",
@@ -19,7 +26,7 @@
           "id",
           "name",
           "aliases",
-          "notes"
+          "noteIds"
         ],
         "properties": {
           "id": {
@@ -60,12 +67,14 @@
             },
             "additionalProperties": false
           },
-          "notes": {
+          "noteIds": {
             "type": "array",
             "minItems": 1,
             "items": {
-              "$ref": "#/$defs/note"
-            }
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
           }
         },
         "additionalProperties": false
@@ -74,15 +83,17 @@
     "others": {
       "type": "object",
       "required": [
-        "notes"
+        "noteIds"
       ],
       "properties": {
-        "notes": {
+        "noteIds": {
           "type": "array",
           "minItems": 1,
           "items": {
-            "$ref": "#/$defs/note"
-          }
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
         }
       },
       "additionalProperties": false

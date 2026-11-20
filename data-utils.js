@@ -63,9 +63,19 @@
   }
 
   function normalizeData(raw) {
-    let people = Array.isArray(raw?.people) ? raw.people : null;
+    let peopleSource = Array.isArray(raw?.people) ? raw.people : null;
+    const noteLibraryById = new Map();
 
-    if (!people && Array.isArray(raw?.notes)) {
+    function addLibraryNote(note, index, prefix) {
+      const normalized = normalizeNote(note, index, prefix);
+      if (!normalized.message) return "";
+      if (!noteLibraryById.has(normalized.id)) {
+        noteLibraryById.set(normalized.id, normalized);
+      }
+      return normalized.id;
+    }
+
+    if (!peopleSource && Array.isArray(raw?.notes) && raw.notes.some((entry) => entry?.name)) {
       const grouped = new Map();
       raw.notes.forEach((entry) => {
         const name = String(entry?.name || "").trim();
@@ -76,7 +86,7 @@
             id: makeId("person"),
             name,
             aliases: [],
-            notes: []
+            noteIds: []
           });
         }
         const person = grouped.get(key);
@@ -84,41 +94,79 @@
           ? entry.messages
           : [entry?.message].filter(Boolean);
         messages.forEach((message, index) => {
-          person.notes.push(normalizeNote(message, index, "note"));
+          const noteId = addLibraryNote(message, index, "note");
+          if (noteId) person.noteIds.push(noteId);
         });
       });
-      people = Array.from(grouped.values());
+      peopleSource = Array.from(grouped.values());
     }
 
-    people = (people || []).map((person, index) => ({
-      id: String(person?.id || makeId(`person-${index + 1}`)),
-      name: String(person?.name || "").trim(),
-      aliases: Array.isArray(person?.aliases)
-        ? person.aliases.map((alias) => String(alias).trim()).filter(Boolean)
-        : [],
-      screening: normalizeScreening(person?.screening),
-      notes: (Array.isArray(person?.notes) ? person.notes : [])
-        .map((note, noteIndex) => normalizeNote(note, noteIndex, "note"))
-        .filter((note) => note.message)
-    })).filter((person) => person.name && person.notes.length);
+    if (Array.isArray(raw?.noteLibrary)) {
+      raw.noteLibrary.forEach((note, index) => {
+        addLibraryNote(note, index, "library");
+      });
+    }
 
-    let otherNotes = [];
-    if (Array.isArray(raw?.others)) {
-      otherNotes = raw.others;
-    } else if (Array.isArray(raw?.others?.notes)) {
-      otherNotes = raw.others.notes;
+    const people = (peopleSource || []).map((person, index) => {
+      const noteIds = [];
+      if (Array.isArray(person?.noteIds)) {
+        person.noteIds.forEach((noteId) => {
+          const id = String(noteId || "").trim();
+          if (id && noteLibraryById.has(id)) noteIds.push(id);
+        });
+      }
+      if (Array.isArray(person?.notes)) {
+        person.notes.forEach((note, noteIndex) => {
+          const noteId = addLibraryNote(note, noteIndex, "note");
+          if (noteId) noteIds.push(noteId);
+        });
+      }
+
+      return {
+        id: String(person?.id || makeId(`person-${index + 1}`)),
+        name: String(person?.name || "").trim(),
+        aliases: Array.isArray(person?.aliases)
+          ? person.aliases.map((alias) => String(alias).trim()).filter(Boolean)
+          : [],
+        screening: normalizeScreening(person?.screening),
+        noteIds: Array.from(new Set(noteIds))
+      };
+    }).filter((person) => person.name && person.noteIds.length);
+
+    const otherNoteIds = [];
+    if (Array.isArray(raw?.others?.noteIds)) {
+      raw.others.noteIds.forEach((noteId) => {
+        const id = String(noteId || "").trim();
+        if (id && noteLibraryById.has(id)) otherNoteIds.push(id);
+      });
+    }
+    if (Array.isArray(raw?.others?.notes)) {
+      raw.others.notes.forEach((note, index) => {
+        const noteId = addLibraryNote(note, index, "fallback");
+        if (noteId) otherNoteIds.push(noteId);
+      });
+    } else if (Array.isArray(raw?.others)) {
+      raw.others.forEach((note, index) => {
+        const noteId = addLibraryNote(note, index, "fallback");
+        if (noteId) otherNoteIds.push(noteId);
+      });
     } else if (Array.isArray(raw?.fallbackMessages)) {
-      otherNotes = raw.fallbackMessages;
+      raw.fallbackMessages.forEach((note, index) => {
+        const noteId = addLibraryNote(note, index, "fallback");
+        if (noteId) otherNoteIds.push(noteId);
+      });
     }
 
-    otherNotes = otherNotes
-      .map((note, index) => normalizeNote(note, index, "fallback"))
-      .filter((note) => note.message);
+    const noteLibrary = Array.from(noteLibraryById.values());
+    const libraryIds = new Set(noteLibrary.map((note) => note.id));
 
     return {
-      version: Number(raw?.version) || 1,
+      version: 2,
+      noteLibrary,
       people,
-      others: { notes: otherNotes }
+      others: {
+        noteIds: Array.from(new Set(otherNoteIds)).filter((id) => libraryIds.has(id))
+      }
     };
   }
 

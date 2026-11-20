@@ -34,6 +34,12 @@
     screeningStatus: document.getElementById("screeningStatus"),
     addPersonButton: document.getElementById("addPersonButton"),
     addNoteButton: document.getElementById("addNoteButton"),
+    openLibraryButton: document.getElementById("openLibraryButton"),
+    noteLibraryDialog: document.getElementById("noteLibraryDialog"),
+    closeLibraryButton: document.getElementById("closeLibraryButton"),
+    librarySearchInput: document.getElementById("librarySearchInput"),
+    librarySummary: document.getElementById("librarySummary"),
+    noteLibraryList: document.getElementById("noteLibraryList"),
     notesEditor: document.getElementById("notesEditor"),
     actionStatus: document.getElementById("actionStatus"),
     reloadButton: document.getElementById("reloadButton"),
@@ -76,54 +82,30 @@
       name: "新名字",
       aliases: [],
       screening: null,
-      notes: [createNote()]
+      noteIds: []
     };
   }
 
   function makeEmptyData() {
+    const fallback = createNote("fallback");
+    fallback.message = "愿你今天也有值得期待的小事，也有可以安心停下来的时刻。";
     return {
-      version: 1,
+      version: 2,
+      noteLibrary: [fallback],
       people: [],
       others: {
-        notes: [{
-          id: dataUtils.makeId("fallback"),
-          message: "愿你今天也有值得期待的小事，也有可以安心停下来的时刻。",
-          createdAt: new Date().toISOString()
-        }]
+        noteIds: [fallback.id]
       }
     };
   }
 
   function asEditableData(raw) {
-    const people = Array.isArray(raw?.people) ? raw.people : [];
-    const otherNotes = Array.isArray(raw?.others?.notes)
-      ? raw.others.notes
-      : Array.isArray(raw?.others)
-        ? raw.others
-        : [];
-
+    const data = dataUtils.normalizeData(raw);
     return {
-      version: 1,
-      people: people.map((person) => ({
-        id: String(person?.id || dataUtils.makeId("person")),
-        name: String(person?.name || ""),
-        aliases: Array.isArray(person?.aliases)
-          ? person.aliases.map((alias) => String(alias))
-          : [],
-        screening: dataUtils.normalizeScreening(person?.screening),
-        notes: (Array.isArray(person?.notes) ? person.notes : []).map((note) => ({
-          id: String(note?.id || dataUtils.makeId("note")),
-          message: String(note?.message || ""),
-          createdAt: dataUtils.normalizeDate(note?.createdAt)
-        }))
-      })),
-      others: {
-        notes: otherNotes.map((note) => ({
-          id: String(note?.id || dataUtils.makeId("fallback")),
-          message: String(note?.message || ""),
-          createdAt: dataUtils.normalizeDate(note?.createdAt)
-        }))
-      }
+      version: 2,
+      noteLibrary: data.noteLibrary,
+      people: data.people,
+      others: data.others
     };
   }
 
@@ -133,13 +115,38 @@
     return state.data.people.find((person) => person.id === id) || null;
   }
 
-  function getSelectedNotes() {
+  function getSelectedNoteIds() {
     const person = getSelectedPerson();
-    return person ? person.notes : state.data.others.notes;
+    return person ? person.noteIds : state.data.others.noteIds;
+  }
+
+  function getNoteById(noteId) {
+    return state.data.noteLibrary.find((note) => note.id === noteId) || null;
+  }
+
+  function ensureFallbackNote() {
+    if (state.data.others.noteIds.length) return;
+    const note = createNote("fallback");
+    note.message = "愿你今天也有值得期待的小事，也有可以安心停下来的时刻。";
+    state.data.noteLibrary.push(note);
+    state.data.others.noteIds.push(note.id);
+  }
+
+  function resolveNotes(noteIds) {
+    return noteIds.map((noteId) => getNoteById(noteId)).filter(Boolean);
+  }
+
+  function getSelectedNotes() {
+    return resolveNotes(getSelectedNoteIds());
+  }
+
+  function noteUsageCount(noteId) {
+    const personalUses = state.data.people.filter((person) => person.noteIds.includes(noteId)).length;
+    return personalUses + (state.data.others.noteIds.includes(noteId) ? 1 : 0);
   }
 
   function totalNotes() {
-    return state.data.people.reduce((total, person) => total + person.notes.length, 0);
+    return state.data.noteLibrary.length;
   }
 
   function setStatus(message) {
@@ -163,8 +170,8 @@
   function updateStats() {
     elements.peopleCount.textContent = String(state.data.people.length);
     elements.notesCount.textContent = String(totalNotes());
-    elements.fallbackCount.textContent = String(state.data.others.notes.length);
-    elements.othersListCount.textContent = String(state.data.others.notes.length);
+    elements.fallbackCount.textContent = String(state.data.others.noteIds.length);
+    elements.othersListCount.textContent = String(state.data.others.noteIds.length);
   }
 
   function updateJsonPreview() {
@@ -232,7 +239,7 @@
 
       const count = document.createElement("span");
       count.className = "count-badge";
-      count.textContent = String(person.notes.length);
+      count.textContent = String(person.noteIds.length);
       button.append(copy, count);
       button.addEventListener("click", () => {
         state.selectedKey = `person:${person.id}`;
@@ -272,13 +279,12 @@
 
   function renderNotes() {
     const notes = getSelectedNotes();
-    const person = getSelectedPerson();
     elements.notesEditor.replaceChildren();
 
     if (!notes.length) {
       const empty = document.createElement("div");
       empty.className = "empty-notes";
-      empty.textContent = "这里还没有小纸条，点击“添加一张”开始。";
+      empty.textContent = "这里还没有小纸条，可以新建一张或从纸条库选择。";
       elements.notesEditor.append(empty);
       return;
     }
@@ -290,18 +296,28 @@
 
       const toolbar = document.createElement("div");
       toolbar.className = "note-toolbar";
+      const titleGroup = document.createElement("div");
+      titleGroup.className = "note-title-group";
       const number = document.createElement("span");
       number.className = "note-number";
       number.textContent = `小纸条 ${String(index + 1).padStart(2, "0")}`;
+      titleGroup.append(number);
+      const usage = noteUsageCount(note.id);
+      if (usage > 1) {
+        const shareBadge = document.createElement("span");
+        shareBadge.className = "note-share-badge";
+        shareBadge.textContent = `共享给 ${usage} 人`;
+        titleGroup.append(shareBadge);
+      }
 
       const actions = document.createElement("div");
       actions.className = "note-actions";
       actions.append(
         makeActionButton("↑", "up", note.id, index === 0),
         makeActionButton("↓", "down", note.id, index === notes.length - 1),
-        makeActionButton("删除", "delete", note.id, false, "is-delete")
+        makeActionButton("移出", "delete", note.id, false, "is-delete")
       );
-      toolbar.append(number, actions);
+      toolbar.append(titleGroup, actions);
 
       const textarea = document.createElement("textarea");
       textarea.rows = 5;
@@ -354,9 +370,91 @@
       });
     });
 
-    if (person === null) {
-      // 普通祝福同样允许排序和删除，这里不额外插入状态说明。
+  }
+
+  function getNoteRecipients(noteId) {
+    const names = state.data.people
+      .filter((person) => person.noteIds.includes(noteId))
+      .map((person) => person.name.trim() || "未命名");
+    if (state.data.others.noteIds.includes(noteId)) names.push("普通祝福");
+    return names;
+  }
+
+  function toggleNoteAttachment(noteId) {
+    const noteIds = getSelectedNoteIds();
+    const index = noteIds.indexOf(noteId);
+    if (index >= 0) {
+      noteIds.splice(index, 1);
+      updateDirtyState("已将纸条从当前名字移出。");
+    } else {
+      noteIds.push(noteId);
+      updateDirtyState("已将纸条加入当前名字。");
     }
+    renderAll();
+    renderLibraryDialog();
+  }
+
+  function renderLibraryDialog() {
+    const query = elements.librarySearchInput.value.normalize("NFKC").trim().toLocaleLowerCase("zh-CN");
+    const currentIds = new Set(getSelectedNoteIds());
+    const notes = state.data.noteLibrary.filter((note) => {
+      if (!query) return true;
+      return note.message.normalize("NFKC").toLocaleLowerCase("zh-CN").includes(query);
+    });
+
+    elements.noteLibraryList.replaceChildren();
+    elements.librarySummary.textContent = `${notes.length} / ${state.data.noteLibrary.length} 张纸条`;
+
+    if (!notes.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty-notes";
+      empty.textContent = query ? "没有找到包含这段文字的纸条。" : "纸条库还是空的。";
+      elements.noteLibraryList.append(empty);
+      return;
+    }
+
+    notes.forEach((note) => {
+      const attached = currentIds.has(note.id);
+      const recipients = getNoteRecipients(note.id);
+      const item = document.createElement("article");
+      item.className = `library-item${attached ? " is-attached" : ""}`;
+
+      const copy = document.createElement("div");
+      copy.className = "library-item-copy";
+      const message = document.createElement("p");
+      message.className = "library-item-message";
+      message.textContent = note.message;
+
+      const meta = document.createElement("div");
+      meta.className = "library-item-meta";
+      const time = document.createElement("span");
+      time.textContent = dataUtils.formatTimestamp(note.createdAt);
+      const usage = document.createElement("span");
+      usage.textContent = recipients.length
+        ? `关联：${recipients.join("、")}`
+        : "尚未关联名字";
+      meta.append(time, usage);
+      copy.append(message, meta);
+
+      const action = document.createElement("button");
+      action.type = "button";
+      action.className = "library-item-action";
+      action.textContent = attached ? "移出" : "加入";
+      action.addEventListener("click", () => toggleNoteAttachment(note.id));
+      item.append(copy, action);
+      elements.noteLibraryList.append(item);
+    });
+  }
+
+  function openLibraryDialog() {
+    elements.librarySearchInput.value = "";
+    renderLibraryDialog();
+    if (typeof elements.noteLibraryDialog.showModal === "function") {
+      elements.noteLibraryDialog.showModal();
+    } else {
+      elements.noteLibraryDialog.setAttribute("open", "");
+    }
+    requestAnimationFrame(() => elements.librarySearchInput.focus());
   }
 
   function renderEditor() {
@@ -398,6 +496,7 @@
     renderPersonSelect();
     renderEditor();
     updateJsonPreview();
+    if (elements.noteLibraryDialog.open) renderLibraryDialog();
   }
 
   function selectKey(key) {
@@ -407,6 +506,9 @@
 
   function addPerson() {
     const person = createPerson();
+    const note = createNote();
+    state.data.noteLibrary.push(note);
+    person.noteIds.push(note.id);
     state.data.people.push(person);
     state.selectedKey = `person:${person.id}`;
     renderAll();
@@ -420,7 +522,7 @@
   function deletePerson() {
     const person = getSelectedPerson();
     if (!person) return;
-    if (!window.confirm(`删除“${person.name.trim() || "未命名"}”以及其中的 ${person.notes.length} 张小纸条？`)) {
+    if (!window.confirm(`删除“${person.name.trim() || "未命名"}”及其纸条关联？纸条库内容不会被删除。`)) {
       return;
     }
 
@@ -433,10 +535,12 @@
   }
 
   function addNote() {
-    const notes = getSelectedNotes();
-    notes.push(createNote(getSelectedPerson() ? "note" : "fallback"));
+    const note = createNote(getSelectedPerson() ? "note" : "fallback");
+    state.data.noteLibrary.push(note);
+    getSelectedNoteIds().push(note.id);
     renderAll();
-    updateDirtyState("已添加一张小纸条。");
+    if (elements.noteLibraryDialog.open) renderLibraryDialog();
+    updateDirtyState("已新建一张小纸条并加入纸条库。");
     requestAnimationFrame(() => {
       const inputs = elements.notesEditor.querySelectorAll("textarea");
       inputs[inputs.length - 1]?.focus();
@@ -444,27 +548,28 @@
   }
 
   function moveNote(noteId, direction) {
-    const notes = getSelectedNotes();
-    const index = notes.findIndex((note) => note.id === noteId);
+    const noteIds = getSelectedNoteIds();
+    const index = noteIds.indexOf(noteId);
     const nextIndex = index + direction;
-    if (index < 0 || nextIndex < 0 || nextIndex >= notes.length) return;
-    [notes[index], notes[nextIndex]] = [notes[nextIndex], notes[index]];
+    if (index < 0 || nextIndex < 0 || nextIndex >= noteIds.length) return;
+    [noteIds[index], noteIds[nextIndex]] = [noteIds[nextIndex], noteIds[index]];
     renderAll();
     updateDirtyState("已调整纸条顺序。");
   }
 
   function deleteNote(noteId) {
-    const notes = getSelectedNotes();
-    const index = notes.findIndex((note) => note.id === noteId);
+    const noteIds = getSelectedNoteIds();
+    const index = noteIds.indexOf(noteId);
     if (index < 0) return;
-    if (!window.confirm("删除这张小纸条？")) return;
-    notes.splice(index, 1);
+    if (!window.confirm("将这张纸条从当前名字移出？纸条仍会保留在纸条库中。")) return;
+    noteIds.splice(index, 1);
     renderAll();
-    updateDirtyState("已删除一张小纸条。");
+    if (elements.noteLibraryDialog.open) renderLibraryDialog();
+    updateDirtyState("已将纸条从当前名字移出，纸条库中的内容仍保留。");
   }
 
   function setNoteTimeToNow(noteId) {
-    const note = getSelectedNotes().find((item) => item.id === noteId);
+    const note = getNoteById(noteId);
     if (!note) return;
     note.createdAt = new Date().toISOString();
     renderEditor();
@@ -534,6 +639,7 @@
   function validateData() {
     const errors = [];
     const identityOwners = new Map();
+    const noteIdsInLibrary = new Set(state.data.noteLibrary.map((note) => note.id));
 
     if (!state.data.people.length) {
       errors.push("至少添加一个名字。");
@@ -556,11 +662,16 @@
       if (hasQuestion !== hasAnswers) {
         errors.push(`“${name || "未命名"}”的筛查问题和答案需要同时设置。`);
       }
-      if (!person.notes.length) {
+      if (!person.noteIds.length) {
         errors.push(`“${name || "未命名"}”还没有小纸条。`);
       }
-      person.notes.forEach((note, noteIndex) => {
-        if (!note.message.trim()) {
+      person.noteIds.forEach((noteId, noteIndex) => {
+        if (!noteIdsInLibrary.has(noteId)) {
+          errors.push(`“${name || "未命名"}”的第 ${noteIndex + 1} 张小纸条不存在于纸条库。`);
+          return;
+        }
+        const note = getNoteById(noteId);
+        if (!note?.message.trim()) {
           errors.push(`“${name || "未命名"}”的第 ${noteIndex + 1} 张小纸条是空的。`);
         }
       });
@@ -590,14 +701,23 @@
       }
     });
 
-    if (!state.data.others.notes.length) {
+    if (!state.data.others.noteIds.length) {
       errors.push("至少保留一张普通祝福。");
     }
-    state.data.others.notes.forEach((note, index) => {
-      if (!note.message.trim()) {
+    state.data.others.noteIds.forEach((noteId, index) => {
+      if (!noteIdsInLibrary.has(noteId)) {
+        errors.push(`第 ${index + 1} 张普通祝福不存在于纸条库。`);
+        return;
+      }
+      const note = getNoteById(noteId);
+      if (!note?.message.trim()) {
         errors.push(`第 ${index + 1} 张普通祝福是空的。`);
       }
     });
+
+    if (noteIdsInLibrary.size !== state.data.noteLibrary.length) {
+      errors.push("纸条库中存在重复的纸条 ID。");
+    }
 
     return errors;
   }
@@ -619,9 +739,16 @@
           return true;
         });
     };
+    const publishableNotes = state.data.noteLibrary.filter((note) => note.message.trim());
+    const publishableNoteIds = new Set(publishableNotes.map((note) => note.id));
 
     return {
-      version: 1,
+      version: 2,
+      noteLibrary: publishableNotes.map((note) => ({
+        id: note.id,
+        message: note.message.trim(),
+        createdAt: dataUtils.normalizeDate(note.createdAt)
+      })),
       people: state.data.people.map((person) => ({
         id: person.id,
         name: person.name.trim(),
@@ -633,18 +760,11 @@
             answerHashes: Array.from(new Set(person.screening.answerHashes))
           }
         } : {}),
-        notes: person.notes.map((note) => ({
-          id: note.id,
-          message: note.message.trim(),
-          createdAt: dataUtils.normalizeDate(note.createdAt)
-        }))
+        noteIds: Array.from(new Set(person.noteIds)).filter((noteId) => publishableNoteIds.has(noteId))
       })),
       others: {
-        notes: state.data.others.notes.map((note) => ({
-          id: note.id,
-          message: note.message.trim(),
-          createdAt: dataUtils.normalizeDate(note.createdAt)
-        }))
+        noteIds: Array.from(new Set(state.data.others.noteIds))
+          .filter((noteId) => publishableNoteIds.has(noteId))
       }
     };
   }
@@ -660,9 +780,7 @@
       if (!response.ok) throw new Error(`读取失败：${response.status}`);
       const raw = await response.json();
       state.data = asEditableData(dataUtils.normalizeData(raw));
-      if (!state.data.others.notes.length) {
-        state.data.others.notes = [createNote("fallback")];
-      }
+      ensureFallbackNote();
       state.selectedKey = state.data.people[0]
         ? `person:${state.data.people[0].id}`
         : "others";
@@ -891,9 +1009,7 @@
       const draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null");
       if (!draft?.data) return;
       state.data = asEditableData(draft.data);
-      if (!state.data.others.notes.length) {
-        state.data.others.notes = [createNote("fallback")];
-      }
+      ensureFallbackNote();
       state.selectedKey = state.data.people[0]
         ? `person:${state.data.people[0].id}`
         : "others";
@@ -920,6 +1036,12 @@
     elements.mobileAddPersonButton.addEventListener("click", addPerson);
     elements.emptyAddPersonButton.addEventListener("click", addPerson);
     elements.addNoteButton.addEventListener("click", addNote);
+    elements.openLibraryButton.addEventListener("click", openLibraryDialog);
+    elements.closeLibraryButton.addEventListener("click", () => elements.noteLibraryDialog.close());
+    elements.librarySearchInput.addEventListener("input", renderLibraryDialog);
+    elements.noteLibraryDialog.addEventListener("click", (event) => {
+      if (event.target === elements.noteLibraryDialog) elements.noteLibraryDialog.close();
+    });
     elements.deletePersonButton.addEventListener("click", deletePerson);
     elements.saveScreeningButton.addEventListener("click", saveScreening);
 

@@ -7,7 +7,7 @@
   <meta name="robots" content="noindex, nofollow, noarchive">
   <title>悄悄话 · 发布端</title>
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
-  <link rel="stylesheet" href="./publisher.css?v=20261120-2">
+  <link rel="stylesheet" href="./publisher.css?v=20261121-1">
 </head>
 <body>
   <div class="pub-shell">
@@ -125,9 +125,12 @@
 
             <div class="notes-heading">
               <h3>小纸条分布</h3>
-              <button class="secondary-button" id="addNoteButton" type="button">＋ 添加一张</button>
+              <div class="notes-heading-actions">
+                <button class="secondary-button" id="openLibraryButton" type="button">检索纸条库</button>
+                <button class="secondary-button" id="addNoteButton" type="button">＋ 新建纸条</button>
+              </div>
             </div>
-            <p class="notes-hint">新添加的小纸条会自动记录当前东八区时间；也可以点击“当前时间”重新采集。</p>
+            <p class="notes-hint">新纸条会自动记录当前东八区时间；同一张纸条可以关联多个名字，修改正文或时间会同步到所有关联者。</p>
             <div class="notes-editor" id="notesEditor"></div>
           </div>
         </section>
@@ -188,7 +191,25 @@
     </main>
   </div>
 
-  <script src="./data-utils.js?v=20261120-2"></script>
-  <script src="./publisher.js?v=20261120-2"></script>
+  <dialog class="library-dialog" id="noteLibraryDialog">
+    <div class="library-dialog-card">
+      <header class="library-dialog-head">
+        <div>
+          <p class="eyebrow">纸条库</p>
+          <h2>选择要加入当前名字的纸条</h2>
+        </div>
+        <button class="round-button" id="closeLibraryButton" type="button" aria-label="关闭纸条库">×</button>
+      </header>
+      <label class="library-search">
+        <span class="sr-only">搜索纸条内容</span>
+        <input id="librarySearchInput" type="search" autocomplete="off" placeholder="搜索纸条内容…">
+      </label>
+      <p class="library-summary" id="librarySummary"></p>
+      <div class="library-list" id="noteLibraryList"></div>
+    </div>
+  </dialog>
+
+  <script src="./data-utils.js?v=20261121-1"></script>
+  <script src="./publisher.js?v=20261121-1"></script>
 </body>
 </html>

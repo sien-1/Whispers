@@ -1,5 +1,52 @@
 {
-  "version": 1,
+  "version": 2,
+  "noteLibrary": [
+    {
+      "id": "demo-note-1",
+      "message": "愿你每一次认真生活，都有回声；愿那些暂时没说出口的话，也能在合适的时候被温柔接住。",
+      "createdAt": "2026-12-31T23:47:00+08:00"
+    },
+    {
+      "id": "demo-note-2",
+      "message": "希望新的一年里，你偶尔停下来时，会发现自己已经走了很远，也依然没有丢掉喜欢的东西。",
+      "createdAt": "2026-12-31T23:51:00+08:00"
+    },
+    {
+      "id": "demo-note-3",
+      "message": "如果今天有一点累，就把步子放慢些。好消息不必赶路，它也会找到你。",
+      "createdAt": "2026-12-31T23:58:00+08:00"
+    },
+    {
+      "id": "demo-shared-note",
+      "message": "愿新的日子里，你总能遇见值得期待的小事，也总有一盏灯为你亮着。",
+      "createdAt": "2026-12-31T23:59:00+08:00"
+    },
+    {
+      "id": "demo-duplicate-note-1",
+      "message": "这是同名的第一位朋友会看到的小纸条。",
+      "createdAt": "2026-12-31T23:54:00+08:00"
+    },
+    {
+      "id": "demo-duplicate-note-2",
+      "message": "这是同名的第二位朋友会看到的小纸条。",
+      "createdAt": "2026-12-31T23:56:00+08:00"
+    },
+    {
+      "id": "demo-fallback-1",
+      "message": "愿你最近睡得安稳，醒来时不慌不忙，心里有一小块地方始终明亮。",
+      "createdAt": "2026-12-31T23:47:00+08:00"
+    },
+    {
+      "id": "demo-fallback-2",
+      "message": "新的一年，希望你遇见的风都柔和，走过的路都有小小的欢喜。",
+      "createdAt": "2026-12-31T23:47:00+08:00"
+    },
+    {
+      "id": "demo-fallback-3",
+      "message": "愿日子里有值得期待的小事，也有可以安心停靠的时刻。",
+      "createdAt": "2026-12-31T23:47:00+08:00"
+    }
+  ],
   "people": [
     {
       "id": "demo-person",
@@ -7,22 +54,19 @@
       "aliases": [
         "演示"
       ],
-      "notes": [
-        {
-          "id": "demo-note-1",
-          "message": "愿你每一次认真生活，都有回声；愿那些暂时没说出口的话，也能在合适的时候被温柔接住。",
-          "createdAt": "2026-12-31T23:47:00+08:00"
-        },
-        {
-          "id": "demo-note-2",
-          "message": "希望新的一年里，你偶尔停下来时，会发现自己已经走了很远，也依然没有丢掉喜欢的东西。",
-          "createdAt": "2026-12-31T23:51:00+08:00"
-        },
-        {
-          "id": "demo-note-3",
-          "message": "如果今天有一点累，就把步子放慢些。好消息不必赶路，它也会找到你。",
-          "createdAt": "2026-12-31T23:58:00+08:00"
-        }
+      "noteIds": [
+        "demo-note-1",
+        "demo-note-2",
+        "demo-note-3",
+        "demo-shared-note"
+      ]
+    },
+    {
+      "id": "demo-shared-person",
+      "name": "阿岚",
+      "aliases": [],
+      "noteIds": [
+        "demo-shared-note"
       ]
     },
     {
@@ -35,12 +79,8 @@
           "a8027f71a8e38bcb912f7c24ae1415cd151af10b84f30d5f2429a532b2be3a5c"
         ]
       },
-      "notes": [
-        {
-          "id": "demo-duplicate-note-1",
-          "message": "这是同名的第一位朋友会看到的小纸条。",
-          "createdAt": "2026-12-31T23:54:00+08:00"
-        }
+      "noteIds": [
+        "demo-duplicate-note-1"
       ]
     },
     {
@@ -53,32 +93,16 @@
           "1bea20e1df19b12013976de2b5e0e3d1fb4ba088b59fe53642c324298b21ffd9"
         ]
       },
-      "notes": [
-        {
-          "id": "demo-duplicate-note-2",
-          "message": "这是同名的第二位朋友会看到的小纸条。",
-          "createdAt": "2026-12-31T23:56:00+08:00"
-        }
+      "noteIds": [
+        "demo-duplicate-note-2"
       ]
     }
   ],
   "others": {
-    "notes": [
-      {
-        "id": "demo-fallback-1",
-        "message": "愿你最近睡得安稳，醒来时不慌不忙，心里有一小块地方始终明亮。",
-        "createdAt": "2026-12-31T23:47:00+08:00"
-      },
-      {
-        "id": "demo-fallback-2",
-        "message": "新的一年，希望你遇见的风都柔和，走过的路都有小小的欢喜。",
-        "createdAt": "2026-12-31T23:47:00+08:00"
-      },
-      {
-        "id": "demo-fallback-3",
-        "message": "愿日子里有值得期待的小事，也有可以安心停靠的时刻。",
-        "createdAt": "2026-12-31T23:47:00+08:00"
-      }
+    "noteIds": [
+      "demo-fallback-1",
+      "demo-fallback-2",
+      "demo-fallback-3"
     ]
   }
 }
