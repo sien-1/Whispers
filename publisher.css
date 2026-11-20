@@ -120,7 +120,7 @@ summary:focus-visible {
 }
 
 .text-button {
-  margin-left: auto;
+  margin-left: 0;
   padding: 9px 13px;
   border-radius: 999px;
   color: var(--muted);
@@ -131,6 +131,12 @@ summary:focus-visible {
 .text-button:hover {
   background: rgba(255, 255, 255, 0.72);
   color: var(--ink);
+}
+
+.header-publish {
+  min-height: 40px;
+  margin-left: auto;
+  padding: 0 16px;
 }
 
 .draft-banner {
@@ -698,6 +704,21 @@ select:focus {
   margin-top: 5px;
 }
 
+.github-quick-status {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.github-quick-status.is-ready {
+  color: #587060;
+}
+
+.quick-publish {
+  white-space: nowrap;
+}
+
 .disclosure {
   margin-top: 12px;
   overflow: hidden;
@@ -836,6 +857,10 @@ select:focus {
     display: none;
   }
 
+  .header-publish {
+    min-height: 42px;
+  }
+
   .stats {
     gap: 7px;
   }
@@ -895,6 +920,10 @@ select:focus {
   .save-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
+  }
+
+  .save-actions .quick-publish {
+    grid-column: 1 / -1;
   }
 
   .save-actions button {

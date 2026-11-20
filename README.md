@@ -57,7 +57,7 @@
 - 编辑未匹配时使用的普通祝福
 - 自动保存本机草稿
 - 下载或复制完整的 `notes.json`
-- 使用 GitHub Contents API 直接提交更新
+- 完成一次 GitHub 配置后，可在发布端一键提交 `notes.json`
 
 ![发布端：按名字组织多张小纸条](./docs/screenshots/publisher.png)
 
@@ -178,6 +178,8 @@ http://localhost:8000/?demo=1
 2. 权限选择 **Repository permissions → Contents: Read and write**。
 3. 在发布端填写 `owner/repository`、分支和文件路径。
 4. 令牌只保存在当前标签页的会话存储中，不写入 JSON。
+
+配置完成后，主操作区的“一键发布到 GitHub”会直接提交当前 `notes.json`。新建标签页或关闭浏览器后，出于安全考虑需要重新填写令牌。
 
 也可以点击“下载 JSON”，手动覆盖仓库根目录的 `notes.json` 后提交。
 

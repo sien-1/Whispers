@@ -42,12 +42,16 @@
     copyButton: document.getElementById("copyButton"),
     jsonPreview: document.getElementById("jsonPreview"),
     githubForm: document.getElementById("githubForm"),
+    githubPanel: document.getElementById("githubPanel"),
     repoInput: document.getElementById("repoInput"),
     branchInput: document.getElementById("branchInput"),
     pathInput: document.getElementById("pathInput"),
     tokenInput: document.getElementById("tokenInput"),
     publishButton: document.getElementById("publishButton"),
-    publishStatus: document.getElementById("publishStatus")
+    publishStatus: document.getElementById("publishStatus"),
+    quickPublishButton: document.getElementById("quickPublishButton"),
+    headerPublishButton: document.getElementById("headerPublishButton"),
+    githubQuickStatus: document.getElementById("githubQuickStatus")
   };
 
   const state = {
@@ -723,6 +727,7 @@
     };
     localStorage.setItem(GITHUB_CONFIG_KEY, JSON.stringify(config));
     sessionStorage.setItem(GITHUB_TOKEN_KEY, elements.tokenInput.value.trim());
+    updateGithubQuickStatus();
   }
 
   function restoreGithubConfig() {
@@ -735,6 +740,67 @@
       // 配置损坏时保持默认值。
     }
     elements.tokenInput.value = sessionStorage.getItem(GITHUB_TOKEN_KEY) || "";
+    updateGithubQuickStatus();
+  }
+
+  function getGithubSettings() {
+    const [owner, repo] = elements.repoInput.value.trim().split("/");
+    return {
+      owner: owner || "",
+      repo: repo || "",
+      branch: elements.branchInput.value.trim() || "main",
+      path: elements.pathInput.value.trim().replace(/^\/+/, "") || "notes.json",
+      token: elements.tokenInput.value.trim()
+    };
+  }
+
+  function updateGithubQuickStatus() {
+    const settings = getGithubSettings();
+    const hasRepo = Boolean(settings.owner && settings.repo);
+    const hasToken = Boolean(settings.token);
+
+    elements.githubQuickStatus.classList.toggle("is-ready", hasRepo && hasToken);
+    if (hasRepo && hasToken) {
+      elements.githubQuickStatus.textContent = `已连接 ${settings.owner}/${settings.repo} · ${settings.branch}`;
+    } else if (hasRepo) {
+      elements.githubQuickStatus.textContent = "仓库已填写；首次点击一键发布会提示填写令牌。";
+    } else {
+      elements.githubQuickStatus.textContent = "GitHub 尚未配置";
+    }
+  }
+
+  function openGithubSetup(message, field) {
+    elements.githubPanel.open = true;
+    setPublishStatus(message);
+    setStatus(message);
+    elements.githubPanel.scrollIntoView({ behavior: "smooth", block: "center" });
+    window.setTimeout(() => field?.focus(), 250);
+  }
+
+  function setPublishingState(isPublishing) {
+    state.publishing = isPublishing;
+    elements.publishButton.disabled = isPublishing;
+    elements.quickPublishButton.disabled = isPublishing;
+    elements.headerPublishButton.disabled = isPublishing;
+    elements.publishButton.textContent = isPublishing ? "正在发布…" : "发布当前数据";
+    elements.quickPublishButton.textContent = isPublishing ? "正在发布…" : "一键发布到 GitHub";
+    elements.headerPublishButton.textContent = isPublishing ? "发布中…" : "发布";
+  }
+
+  function quickPublish() {
+    if (state.publishing) return;
+    const settings = getGithubSettings();
+
+    if (!settings.owner || !settings.repo) {
+      openGithubSetup("请先填写 GitHub 仓库，例如 owner/repository。", elements.repoInput);
+      return;
+    }
+    if (!settings.token) {
+      openGithubSetup("首次发布需要填写 Fine-grained token；本标签页后续发布会继续使用它。", elements.tokenInput);
+      return;
+    }
+
+    publishToGithub();
   }
 
   async function publishToGithub() {
@@ -749,20 +815,20 @@
       return;
     }
 
-    const [owner, repo] = elements.repoInput.value.trim().split("/");
-    const branch = elements.branchInput.value.trim() || "main";
-    const path = elements.pathInput.value.trim().replace(/^\/+/, "") || "notes.json";
-    const token = elements.tokenInput.value.trim();
+    const settings = getGithubSettings();
+    const { owner, repo, branch, path, token } = settings;
 
     if (!owner || !repo || !token) {
-      setPublishStatus("请填写 owner/repository、分支和令牌。");
+      openGithubSetup(
+        "请填写 owner/repository、分支和令牌。",
+        !owner || !repo ? elements.repoInput : elements.tokenInput
+      );
       return;
     }
 
-    state.publishing = true;
-    elements.publishButton.disabled = true;
-    elements.publishButton.textContent = "正在发布…";
+    setPublishingState(true);
     setPublishStatus("正在连接 GitHub…");
+    setStatus("正在发布到 GitHub…");
 
     const encodedPath = path.split("/").map(encodeURIComponent).join("/");
     const endpoint = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodedPath}`;
@@ -814,10 +880,9 @@
     } catch (error) {
       console.error(error);
       setPublishStatus(error.message || "发布失败，请检查仓库权限和网络。");
+      setStatus("发布失败，请检查 GitHub 设置。");
     } finally {
-      state.publishing = false;
-      elements.publishButton.disabled = false;
-      elements.publishButton.textContent = "发布当前数据";
+      setPublishingState(false);
     }
   }
 
@@ -914,6 +979,10 @@
       event.preventDefault();
       publishToGithub();
     });
+    elements.quickPublishButton.addEventListener("click", quickPublish);
+    elements.headerPublishButton.addEventListener("click", quickPublish);
+    [elements.repoInput, elements.branchInput, elements.pathInput, elements.tokenInput]
+      .forEach((input) => input.addEventListener("input", updateGithubQuickStatus));
   }
 
   async function init() {

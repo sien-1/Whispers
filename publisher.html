@@ -7,7 +7,7 @@
   <meta name="robots" content="noindex, nofollow, noarchive">
   <title>悄悄话 · 发布端</title>
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
-  <link rel="stylesheet" href="./publisher.css?v=20261120-1">
+  <link rel="stylesheet" href="./publisher.css?v=20261120-2">
 </head>
 <body>
   <div class="pub-shell">
@@ -19,6 +19,7 @@
         <p class="eyebrow">本机发布工具</p>
         <h1>悄悄话 · 发布端</h1>
       </div>
+      <button class="primary-button header-publish" id="headerPublishButton" type="button">发布</button>
       <a class="text-button" href="./index.html">查看网站</a>
     </header>
 
@@ -136,8 +137,10 @@
         <div>
           <h2>保存与发布</h2>
           <p class="status-message" id="actionStatus" aria-live="polite"></p>
+          <p class="github-quick-status" id="githubQuickStatus">GitHub 尚未配置</p>
         </div>
         <div class="save-actions">
+          <button class="primary-button quick-publish" id="quickPublishButton" type="button">一键发布到 GitHub</button>
           <button class="secondary-button" id="reloadButton" type="button">重新读取</button>
           <button class="secondary-button" id="saveDraftButton" type="button">保存本机草稿</button>
           <button class="secondary-button" id="downloadButton" type="button">下载 JSON</button>
@@ -150,7 +153,7 @@
         <pre class="json-preview" id="jsonPreview"></pre>
       </details>
 
-      <details class="disclosure github-panel">
+      <details class="disclosure github-panel" id="githubPanel">
         <summary>发布到 GitHub</summary>
         <form class="github-form" id="githubForm">
           <p class="form-note">
@@ -159,7 +162,7 @@
           <div class="github-grid">
             <label>
               <span>仓库</span>
-              <input id="repoInput" type="text" autocomplete="off" placeholder="owner/repository" required>
+              <input id="repoInput" type="text" autocomplete="off" placeholder="owner/repository" value="sien-1/Whispers" required>
             </label>
             <label>
               <span>分支</span>
@@ -185,7 +188,7 @@
     </main>
   </div>
 
-  <script src="./data-utils.js?v=20261118-5"></script>
-  <script src="./publisher.js?v=20261118-5"></script>
+  <script src="./data-utils.js?v=20261120-2"></script>
+  <script src="./publisher.js?v=20261120-2"></script>
 </body>
 </html>
