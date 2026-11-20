@@ -802,9 +802,10 @@ select:focus {
     min-width: 0;
   }
 
-  .mobile-picker-row .round-button {
+  .mobile-add-person {
     flex: 0 0 auto;
     margin-bottom: 4px;
+    white-space: nowrap;
   }
 
   .editor-panel {
