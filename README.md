@@ -164,9 +164,9 @@ http://localhost:8000/?demo=1
 ## 发布到 GitHub Pages
 
 1. 将仓库内容推送到 GitHub。
-2. 打开 **Settings → Pages**。
-3. 选择发布分支和仓库根目录。
-4. 等待部署完成。
+2. 在 **Settings → Pages → Build and deployment** 中将 Source 设为 **GitHub Actions**。
+3. 推送 `main` 后，`.github/workflows/pages.yml` 会自动启用并部署站点。
+4. 等待 Actions 完成，然后访问页面环境输出的网址。
 
 如果使用 Vercel 或 Netlify，构建命令留空，发布目录设为仓库根目录即可。
 
