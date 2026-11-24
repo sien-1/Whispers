@@ -44,7 +44,10 @@
     {
       "id": "person-8df54a37-c85f-4ec0-8468-f6cee1f8869e",
       "name": "程果",
-      "aliases": [],
+      "aliases": [
+        "果果",
+        "龙眼鸡"
+      ],
       "screening": {
         "question": "我们第一次见面的城市？（城市名拼音小写）",
         "answerHashes": [
