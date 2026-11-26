@@ -8,9 +8,25 @@
   <meta name="description" content="一张米白横线纸，写下只对某个人说的话。支持姓名匹配、多页纸条与普通祝福。">
   <title>跨年悄悄话 · Whispers</title>
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
-  <link rel="stylesheet" href="./styles.css?v=20261121-1">
+  <script>
+    (() => {
+      const params = new URLSearchParams(location.search);
+      const looks = ["stationery", "editorial", "soft"];
+      const requested = params.get("look");
+      document.documentElement.dataset.look = looks.includes(requested) ? requested : "stationery";
+      document.documentElement.dataset.lab = params.get("lab") === "1" ? "1" : "0";
+    })();
+  </script>
+  <link rel="stylesheet" href="./styles.css?v=20261126-1">
 </head>
 <body>
+  <div class="look-switcher" id="lookSwitcher" aria-label="模板样式预览">
+    <span>模板</span>
+    <button type="button" data-look-option="stationery">信笺</button>
+    <button type="button" data-look-option="editorial">编辑</button>
+    <button type="button" data-look-option="soft">软卡片</button>
+  </div>
+
   <div class="site-shell">
     <button class="back-button" id="backButton" type="button" aria-label="返回首页" hidden>
       <span aria-hidden="true">←</span>
@@ -87,7 +103,7 @@
     <p class="noscript-message">请开启 JavaScript，纸条才能展开。</p>
   </noscript>
 
-  <script src="./data-utils.js?v=20261121-1"></script>
-  <script src="./app.js?v=20261121-1"></script>
+  <script src="./data-utils.js?v=20261126-1"></script>
+  <script src="./app.js?v=20261126-1"></script>
 </body>
 </html>

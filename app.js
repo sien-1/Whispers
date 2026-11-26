@@ -350,4 +350,21 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
+function setVisualLook(look) {
+  const allowed = ["stationery", "editorial", "soft"];
+  const selected = allowed.includes(look) ? look : "stationery";
+  document.documentElement.dataset.look = selected;
+  document.querySelectorAll("[data-look-option]").forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.lookOption === selected));
+  });
+  const url = new URL(window.location.href);
+  url.searchParams.set("look", selected);
+  window.history.replaceState({}, "", url);
+}
+
+document.querySelectorAll("[data-look-option]").forEach((button) => {
+  button.addEventListener("click", () => setVisualLook(button.dataset.lookOption));
+});
+setVisualLook(document.documentElement.dataset.look);
+
 loadNotes();
